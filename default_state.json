@@ -1,0 +1,17 @@
+{
+    "settings": {
+        "timestep": 5,
+        "amount": 0.3,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "rsi_period": 14,
+        "startup": 5,
+        "status": "running",
+        "dropoff": 75
+    },
+    "prices": [],
+    "rsi": [],
+    "signals": [],
+    "trades": [],
+    "acct_value": 0
+}
