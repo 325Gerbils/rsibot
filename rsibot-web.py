@@ -7,44 +7,58 @@ import json
 frames = 0
 state = {
     "settings": {
-        "timestep": 15.0,  # default 15
-        "amount": 0.30,  # default 30
-        "rsi_low": 30,  # default 30
-        "rsi_high": 70,  # default 70
-        "rsi_period": 14,  # default 14
-        "startup": 0,  # default 10
-        "dropoff": 50,  # default 50
+        "timestep": 15.0, 
+        "amount": 0.30,
+        "rsi_low": 30,
+        "rsi_high": 70,
+        "rsi_period": 14, 
+        "ema_period": 12,
+        "rsi_ema_period": 5,
+        "startup": 5,
+        "dropoff": 240,
         "status": "running",
+        "allow_trading": True,
     },
     "prices": [],
     "rsi": [],
     "signals": [],
     "trades": [],
+    "ema": [],
+    "rsi_ema": [],
+    "acct_history": [],
     "acct_value": 0
 }
 
 
 def buying_power():
-    return float(rs.profiles.load_account_profile(info='crypto_buying_power'))
+    try:
+        return float(rs.profiles.load_account_profile(info='crypto_buying_power'))
+    except:
+        return buying_power()
 
 
 def held_btc():
-    return float([item for item in rs.crypto.get_crypto_positions(info=None) if item['currency']['code'] == 'BTC'][0]['quantity_available'])
-
+    # return float([item for item in insist(rs.crypto.get_crypto_positions,info=None) if item['currency']['code'] == 'BTC'][0]['quantity_available'])
+    try:
+        return float([item for item in rs.crypto.get_crypto_positions(info=None) if item['currency']['code'] == 'BTC'][0]['quantity_available'])
+    except:
+        return held_btc()
 
 def current_price():
-    return float(rs.crypto.get_crypto_quote('BTC', info='mark_price'))
+    try:
+        return float(rs.crypto.get_crypto_quote('BTC', info='mark_price'))
+    except:
+        return current_price()
 
 
 def acct_value():
-    return float(rs.profiles.load_account_profile(info=''))
+    return buying_power() + held_btc()*current_price()
 
 
 def save_state():
     global state
     with open('state.json', 'w') as outfile:
         json.dump(state, outfile)
-
 
 def load_state():
     global state
@@ -88,6 +102,7 @@ def sell():
 rs.login(username="benjamincooley81@gmail.com",
          password="", expiresIn=86400, by_sms=True)
 
+# save_state()
 
 while True:
 
@@ -101,17 +116,31 @@ while True:
     if frames < period and len(state["rsi"]) <= period:
         state["rsi"].append(0)
     else:
-        rsi = ti.rsi(np.array(state["prices"]), period=period)
+        rsi = ti.rsi(np.array(state["prices"], dtype='float64'), period=period)
         last_rsi = rsi[-1]
         state["rsi"].append(last_rsi)
 
+    # update acct_history
+    state["acct_value"] = acct_value()
+    state["acct_history"].append(state["acct_value"])
+
+    # update ema
+    ema = ti.ema(np.array(state["prices"], dtype='float64'), int(state["settings"]["ema_period"]))
+    # print(ema)
+    state["ema"].append(ema[-1])
+
+    # update rsi ema
+    rsi_ema = ti.ema(np.array(state["rsi"], dtype='float64'), int(state["settings"]["rsi_ema_period"]))
+    state["rsi_ema"].append(rsi_ema[-1])
+
     # truncate data to save memory/bandwidth
-    if len(state["prices"]) > state["settings"]["dropoff"]:
-        state["prices"].pop(0)
-    if len(state["rsi"]) > state["settings"]["dropoff"]:
-        state["rsi"].pop(0)
-    if len(state["signals"]) > state["settings"]["dropoff"]:
-        state["signals"].pop(0)
+    d = state["settings"]["dropoff"]
+    state["prices"] = state["prices"][-d:]
+    state["rsi"] = state["rsi"][-d:]
+    state["signals"] = state["signals"][-d:]
+    state["acct_history"] = state["acct_history"][-d:]
+    state["ema"] = state["ema"][-d:]
+    state["rsi_ema"] = state["rsi_ema"][-d:]
 
     # determine buy or sell
     if len(state["rsi"]) > 1:
@@ -128,8 +157,8 @@ while True:
     else:
         state["signals"].append(0)  # no buy or sell
 
-    # wait til next loop
     frames += 1
+    print(frames)
     save_state()
 
     sleep(state["settings"]["timestep"])

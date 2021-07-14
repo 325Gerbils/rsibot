@@ -1,0 +1,21 @@
+{
+  "name": "RSI Bitcoin Bot",
+  "short_name": "RSIbot",
+  "description": "RSI Bitcoin scalping bot using Robinhood's unofficial API.",
+  "icons": [
+    {
+      "src": "icons/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "theme_color": "#111115",
+  "background_color": "#111115"
+}

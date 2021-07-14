@@ -1,9 +1,13 @@
+
 <html>
 
 <head>
-    <title>RSIbot UI (prototype)</title>
+    <title>RSIbot</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#111115">
+    <link rel="icon" href="icons/icon-32.png">
+    <link rel="manifest" href="pwa.webmanifest">
 
     <style type="text/css">
         * {
@@ -88,18 +92,18 @@
         }
         
         .account h1 {
-            font-size: 3em;
             color: #0f0;
+            font-size: 2em;
         }
-        
-        .account h1 span {
-            font-size: 0.6em;
+
+        .account h1 span#acct_value_btc {
+            font-size: 0.7em;
             vertical-align: middle;
         }
         
         .trades {
             width: 33%;
-            margin: 0px;
+            margin: 25px 0;
             padding: 25px;
             height: calc(40vh - 50px);
             border-radius: 5px;
@@ -186,6 +190,15 @@
             padding: 3px;
             border: none;
         }
+
+        button {
+            font-size: 16px;
+            background: #333;
+            color: #eee;
+            padding: 4px 8px 4px 8px;
+            border: none;
+        }
+        button:active { background: #999; }
         
         .green {
             color: #0f0;
@@ -200,26 +213,28 @@
             height: 60vh;
         }
         
-        @media screen and (max-width: 1000px) {
+	    @media screen and (max-width: 1000px) {
             .graph {
                 padding: 20px;
-                height: 40vh;
+                height: 70vh;
+		        min-height: 300px;
             }
             .info {
                 flex-direction: column;
             }
             .account {
-                width: 90%;
+		        font-size: 0.8em;
+                width: 93%;
                 margin: 10px auto;
                 margin-top: 20px;
-                padding: 10px;
+                padding: 10px 5px;
                 height: auto;
             }
             .settings {
-                width: 90%;
+                width: 93%;
                 margin: 10px auto;
                 height: auto;
-                padding: 10px;
+                padding: 10px 5px;
             }
             .settings table {
                 width: 100%;
@@ -227,15 +242,33 @@
                 padding: 0;
             }
             #log {
-                width: 90%;
+                width: 93%;
                 margin: 10px auto;
                 /* height: auto; */
             }
             .trades {
-                width: 90%;
+                width: 93%;
+                padding: 15px 5px;
                 margin: 10px auto;
+                height: auto;
+		        max-height: 25vh;
             }
         }
+	    @media screen and (max-width: 500px) {
+            .graph {
+                padding: 0px;
+                padding-top: 25px;
+                height: 50vh;
+                background: none;
+                box-shadow: none;
+            }
+            .graph canvas {
+                margin: 0;
+                border: none;
+                background: none;
+                box-shadow: none;
+            }
+	    }
     </style>
 </head>
 
@@ -245,19 +278,16 @@
     </div>
 
     <div class="info">
-        <div class="account">
-            <h1><span id="acct_value"></span> <span id="acct_value_btc">(0.032 &#8383;)</span></h1>
-            <h3>Status: <select id="status">
-                <option value="prototyping" >Prototyping</option>
-                <option value="running" selected="selected">Running</option>
-                <option value="restarting">Restarting</option>
-                <option value="paused">Paused</option>
-                <option value="off">Off</option>
-                <option value="unreachable" disabled="disabled">Unreachable</option>
-            </select></h3>
-            <h3>RSI Bitcoin scalping bot using Robinhood's unofficial API. </h3>
-            <h3>Buys when oversold, sells when overbought as a sort of DCA strategy. This bot is not guaranteed to beat the market.</h3>
-            <h3>White line is RSI, rainbow line is price.</h3>
+
+    	<div class="account">
+            <h1><span id="acct_value"></span> <span id="acct_value_btc">(0.032 &#8383;)</span> </h1>
+            <h3 style="font-weight:bold;"><span id="percent_change"></span> (<span id="dollar_btc_change"></span>)</h3>
+            <h3>Allow Trading: <select id="allow_trading">
+                 <option value="enabled">Yes</option>
+                 <option value="disabled" selected="selected">No</option>
+            </select> <button id="refresh_btn" type="button" onclick="refresh()">Refresh</button></h3>
+            <!-- <h3>RSI Bitcoin scalping bot using Robinhood's unofficial API. </h3> -->
+            <!-- <h3>White line is RSI, red and green line is price, dotted grey line is account value.</h3> -->
             <h3>Written by <a href="https://twitter.com/325gerbils" target="_blank">@325gerbils</a></h3>
         </div>
 
@@ -266,7 +296,8 @@
             <div id="trades_box">
             </div>
         </div>
-        <div class="settings">
+        
+	    <div class="settings">
             <table>
                 <tr>
                     <td colspan="6">
@@ -274,22 +305,20 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Allow Trading: </td>
-                    <td><select id="allow_trading">
-                        <option value="enabled">Yes</option>
-                        <option value="disabled" selected="selected">No</option></td>
-                </tr>   
-                <tr>
                     <td>Timestep: </td>
-                    <td><input type="number" id="timestep" value="15"> seconds</td>
+                    <td><input type="number" id="timestep" value="15"></td>
                 </tr>
                 <tr>
                     <td>Amount to trade: </td>
                     <td><input type="number" id="amount" value="0.30" step="0.05"></td>
                 </tr>
                 <tr>
-                    <td>Startup delay: </td>
-                    <td><input type="number" id="startup" value="25"> steps</td>
+                    <td>RSI Low: </td>
+                    <td><input type="number" id="rsi_low" value="30"></td>
+                </tr>
+                <tr>
+                    <td>RSI High: </td>
+                    <td><input type="number" id="rsi_high" value="70"></td>
                 </tr>
                 <!-- <tr>
                     <td>Coin: </td>
@@ -303,32 +332,44 @@
                     <td>Data Dropoff: </td>
                     <td><input type="number" id="dropoff" value="50"></td>
                 </tr>
-                <!-- <tr>
-                    <td>Indicator: </td>
-                    <td><select id="status" disabled="disabled">
-                        <option value="rsi" selected="selected">RSI</option>
-                        <option value="ema">EMA</option>
-                        <option value="macd">MACD</option>
-                        <option value="stochrsi">Stoch. RSI</option>
-                    </select></td>
-                </tr> -->
                 <tr>
-                    <td>RSI Low: </td>
-                    <td><input type="number" id="rsi_low" value="30"></td>
-                </tr>
-                <tr>
-                    <td>RSI High: </td>
-                    <td><input type="number" id="rsi_high" value="70"></td>
+                    <td>EMA Period: </td>
+                    <td><input type="number" id="ema_period" value="12"></td>
                 </tr>
                 <tr>
                     <td>RSI Period: </td>
                     <td><input type="number" id="rsi_period" value="14"></td>
+                </tr>
+                <tr>
+                    <td>RSI EMA Period: </td>
+                    <td><input type="number" id="rsi_ema_period" value="5"></td>
+                </tr>
+                <tr>
+                    <td>Startup delay: </td>
+                    <td><input type="number" id="startup" value="25"></td>
                 </tr>
             </table>
         </div>
     </div>
 
     <script>
+        timestep_elem = document.getElementById("timestep")
+        amount_elem = document.getElementById("amount")
+        rsi_low_elem = document.getElementById("rsi_low")
+        rsi_high_elem = document.getElementById("rsi_high")
+        rsi_period_elem = document.getElementById("rsi_period")
+        ema_period_elem = document.getElementById("ema_period")
+        rsi_ema_period_elem = document.getElementById("rsi_ema_period")
+        startup_elem = document.getElementById("startup")
+        status_elem = document.getElementById("status")
+        dropoff_elem = document.getElementById("dropoff")
+        acct_value_elem = document.getElementById("acct_value")
+        acct_value_btc_elem = document.getElementById("acct_value_btc")
+        allow_trading_elem = document.getElementById("allow_trading")
+        refresh_btn_elem = document.getElementById("refresh_btn")
+        percent_change_elem = document.getElementById("percent_change")
+        dollar_btc_change_elem = document.getElementById("dollar_btc_change")
+        
         state = {
             settings: {
                 timestep: 15.0,
@@ -336,31 +377,72 @@
                 rsi_low: 30,
                 rsi_high: 70,
                 rsi_period: 14,
+                ema_period: 12,
+                rsi_ema_period: 6,
                 startup: 10,
                 status: "running",
+                dropoff: 240,
                 allow_trading: false
             },
             prices: [],
             rsi: [],
             signals: [],
             trades: [],
+            ema: [],
+            rsi_ema: [],
+            acct_history: [],
             acct_value: 0
         }
+        
+        refresh = fetch("/json", {
+                    method: "GET"
+                })
+                .then(response => response.json())
+                .then((response) => {
+                    // console.log(response)
+                    state = response
+                    
+                    timestep_elem.value = state.settings.timestep
+                    amount_elem.value = state.settings.amount
+                    rsi_low_elem.value = state.settings.rsi_low
+                    rsi_high_elem.value = state.settings.rsi_high
+                    rsi_period.value = state.settings.rsi_period
+                    rsi_ema_period_elem.value = state.settings.rsi_ema_period
+                    startup_elem.value = state.settings.startup
+                    dropoff_elem.value = state.settings.dropoff
+                    ema_period_elem.value = state.settings.ema_period
+                    allow_trading_elem.selectedIndex = state.settings.allow_trading?"0":"1"
+
+                    refresh_btn_elem.blur()
+                })
+        document.onload = refresh
+        refresh_btn_elem.onclick = refresh
+        
 
         // Main draw loop
         draw = function(canvas, ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.font = "16px Arial"
 
+            temp_state = state
+            if (canvas.width < 500 && state.prices.length > 120) {
+		        // show only latest half of the data on mobile to be less overwhelming
+		        state.prices = state.prices.slice(-Math.min(state.prices.length, 120))
+		        state.rsi = state.rsi.slice(-Math.min(state.rsi.length, 120))
+		        state.ema = state.ema.slice(-Math.min(state.ema.length, 120))
+		        state.rsi_ema = state.rsi_ema.slice(-Math.min(state.rsi_ema.length, 120))
+		        state.signals = state.signals.slice(-Math.min(state.signals.length, 120)+1)
+		        state.acct_history = state.acct_history.slice(-Math.min(state.acct_history.length, 120))
+	        } 
+
             // Price data
-            ctx.lineWidth = 1
+            ctx.lineWidth = 2
             prices_min = Math.min(...state.prices)
             prices_max = Math.max(...state.prices)
             for (i = 0; i < state.prices.length; i++) {
 
                 // bubbles
                 ctx.fillStyle = "hsla(" + i * 255 / state.prices.length + ", 100%, 50%, 0.10)"
-                ctx.lineWidth = 1
                 ctx.strokeStyle = "hsla(" + (-i * 255 * 10) / state.prices.length + ", 100%, 50%, 1)"
                     // ctx.strokeStyle = "#999"
                     // ctx.beginPath()
@@ -370,7 +452,7 @@
                 // ctx.ellipse(i * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max), r, r, 0, 0, Math.PI * 2, false)
                 // ctx.fill()
                 if (state.prices[i] > state.prices[i - 1]) {
-                    ctx.strokeStyle = "#0f0"
+                    ctx.strokeStyle = "#0c0"
                 } else if (state.prices[i] < state.prices[i - 1]) {
                     ctx.strokeStyle = "#f00"
                 } else {
@@ -382,38 +464,41 @@
                 ctx.moveTo((i - 1) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i - 1] - prices_max) / (prices_min - prices_max))
                 ctx.lineTo(i * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
                 ctx.stroke()
-                ctx.fillStyle = "#ccc"
+                ctx.font = "12px Arial"
+                ctx.fillStyle = "#fff"
                 if (state.prices[i] == prices_min) {
                     ctx.beginPath()
                     ctx.ellipse((i) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
                     ctx.fill()
-                    ctx.fillText("Low: $" + Math.round(state.prices[i] * 1e2) / 1e2, i * canvas.width / state.prices.length - 145, 30 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
+                    offset = (i * canvas.width / state.prices.length) < canvas.width/2 ? 10 : -(ctx.measureText("$" + Math.round(state.prices[i] * 1e2) / 1e2).width+10)
+                    ctx.fillText("$" + Math.round(state.prices[i] * 1e2) / 1e2, i * canvas.width / state.prices.length + offset, 30 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
                 }
                 if (state.prices[i] == prices_max) {
                     ctx.beginPath()
                     ctx.ellipse((i) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
                     ctx.fill()
-                    ctx.fillText("High: $" + Math.round(state.prices[i] * 1e2) / 1e2, i * canvas.width / state.prices.length - 145, 30 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
+                    offset = (i * canvas.width / state.prices.length) < canvas.width/2 ? 10 : -(ctx.measureText("$" + Math.round(state.prices[i] * 1e2) / 1e2).width+10)
+                    ctx.fillText("$" + Math.round(state.prices[i] * 1e2) / 1e2, i * canvas.width / state.prices.length + offset, 30 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
                 }
             }
 
             // 70 line
-            ctx.strokeStyle = "#f90"
+            ctx.strokeStyle = "#666"
             ctx.beginPath()
             ctx.moveTo(0, 25 + ((canvas.height - 50) * (1 - state.settings.rsi_high / 100)))
             ctx.lineTo(canvas.width, 25 + ((canvas.height - 50) * (1 - state.settings.rsi_high / 100)))
             ctx.stroke()
 
             // 30 line
-            ctx.strokeStyle = "#09f"
+            ctx.strokeStyle = "#666"
             ctx.beginPath()
             ctx.moveTo(0, 25 + ((canvas.height - 50) * (1 - state.settings.rsi_low / 100)))
             ctx.lineTo(canvas.width, 25 + ((canvas.height - 50) * (1 - state.settings.rsi_low / 100)))
             ctx.stroke()
 
             // RSI line
-            ctx.strokeStyle = "#eee"
-            ctx.lineWidth = 2
+            ctx.strokeStyle = "#ccc"
+            ctx.lineWidth = 1.2
             rsi_min = Math.min(...state.rsi)
             rsi_max = Math.max(...state.rsi)
             for (i = 0; i < state.rsi.length; i++) {
@@ -428,50 +513,130 @@
                 if (state.signals[i] == 0 && state.signals[i - 1] == -1) {
                     ctx.fillStyle = "rgba(255,0,0,1)"
                     ctx.beginPath()
-                    ctx.ellipse((i) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
+                    ctx.ellipse((i+1) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i+1] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
                     ctx.fill()
                     if (canvas.width > 1000) {
                         ctx.strokeStyle = "rgba(255,0,0,1)"
                         ctx.lineWidth = 1
                         ctx.beginPath()
-                        ctx.moveTo((i) * canvas.width / state.prices.length, 0)
-                        ctx.lineTo((i) * canvas.width / state.prices.length, canvas.height)
+                        ctx.moveTo((i+1) * canvas.width / state.prices.length, 0)
+                        ctx.lineTo((i+1) * canvas.width / state.prices.length, canvas.height)
                         ctx.stroke()
                     }
-                    ctx.fillText("$" + Math.round(state.prices[i] * 1e2) / 1e2, (i) * canvas.width / state.prices.length + 25, 30 + (canvas.height - 50) * (state.prices[i] - prices_max) / (prices_min - prices_max))
+                    ctx.fillStyle = "#fff"
+                    offset = (i * canvas.width / state.prices.length) < canvas.width/2 ? 10 : -(ctx.measureText("$" + Math.round(state.prices[i + 1] * 1e2) / 1e2).width+10)
+                    ctx.fillText("$" + Math.round(state.prices[i + 1] * 1e2) / 1e2, (i + 1) * canvas.width / state.prices.length + offset, 30 + (canvas.height - 50) * (state.prices[i+1] - prices_max) / (prices_min - prices_max))
                 }
                 // buy
                 if (state.signals[i] == 0 && state.signals[i - 1] == 1) {
                     ctx.fillStyle = "rgba(0,255,0,1)"
                     ctx.beginPath()
-                    ctx.ellipse((i - 2) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i - 1] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
+                    ctx.ellipse((i + 1) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.prices[i + 1] - prices_max) / (prices_min - prices_max), 5, 5, 0, 0, Math.PI * 2, false)
                     ctx.fill()
                     if (canvas.width > 1000) {
                         ctx.strokeStyle = "rgba(0,255,0,1)"
                         ctx.lineWidth = 1
                         ctx.beginPath()
-                        ctx.moveTo((i - 2) * canvas.width / state.prices.length, 0)
-                        ctx.lineTo((i - 2) * canvas.width / state.prices.length, canvas.height)
+                        ctx.moveTo((i + 1) * canvas.width / state.prices.length, 0)
+                        ctx.lineTo((i + 1) * canvas.width / state.prices.length, canvas.height)
                         ctx.stroke()
                     }
-                    ctx.fillText("$" + Math.round(state.prices[i] * 1e2) / 1e2, (i - 1) * canvas.width / state.prices.length + 5, 30 + (canvas.height - 50) * (state.prices[i - 1] - prices_max) / (prices_min - prices_max))
+                    ctx.fillStyle = "#fff"
+                    offset = (i * canvas.width / state.prices.length) < canvas.width/2 ? 10 : -(ctx.measureText("$" + Math.round(state.prices[i] * 1e2) / 1e2).width+10)
+                    ctx.fillText("$" + Math.round(state.prices[i] * 1e2) / 1e2, (i + 1) * canvas.width / state.prices.length + offset, 30 + (canvas.height - 50) * (state.prices[i + 1] - prices_max) / (prices_min - prices_max))
                 }
             }
 
-            // labels
-            ctx.fillStyle = "#eee"
-            ctx.fillText("Price: " + Math.round(state.prices[state.prices.length - 1] * 1e2) / 1e2, 25, 25)
-            ctx.fillText("RSI: " + Math.round(state.rsi[state.rsi.length - 1] * 1e1) / 1e1, 25, 50)
+	        // graph account history
+            /*
+	        acct_history_min = Math.min(...state.acct_history)
+            acct_history_max = Math.max(...state.acct_history)
+            ctx.strokeStyle = "#666"
+            ctx.lineWidth = 1
+            ctx.setLineDash([2,5])
+            for (i = 0; i < state.acct_history.length; i++) {
+		        ctx.beginPath()
+                ctx.moveTo((i - 1) * canvas.width / state.acct_history.length, 25 + (canvas.height - 50) * (state.acct_history[i - 1] - acct_history_max) / (acct_history_min - acct_history_max))
+                ctx.lineTo(i * canvas.width / state.acct_history.length, 25 + (canvas.height - 50) * (state.acct_history[i] - acct_history_max) / (acct_history_min - acct_history_max))
+                ctx.stroke()
+	        }
+            ctx.setLineDash([])
+            */
+
+            // graph ema
+            ctx.lineWidth = 1
+            // ctx.setLineDash([2,2])
+            for (i = 0; i < state.prices.length; i++) {
+                ctx.setLineDash([])
+                if (state.ema[i] > state.ema[i - 1]) {
+                    ctx.strokeStyle = "#0c0"
+                } else if (state.ema[i] < state.ema[i - 1]) {
+                    ctx.strokeStyle = "#f00"
+                } else {
+                    ctx.strokeStyle = "#9cf"
+                }
+		        ctx.beginPath()
+                ctx.moveTo(((i+state.prices.length-state.ema.length) - 1) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.ema[i - 1] - prices_max) / (prices_min - prices_max))
+                ctx.lineTo((i+state.prices.length-state.ema.length) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (state.ema[i] - prices_max) / (prices_min - prices_max))
+                ctx.stroke()
+    
+                // ctx.setLineDash([1,1])
+                // if (state.ema[i] > state.ema[i - 1] && state.ema[i - 1] < state.ema[i - 2]) {
+                //     ctx.beginPath()
+                //     ctx.moveTo((i) * canvas.width / state.prices.length, 0)
+                //     ctx.lineTo((i) * canvas.width / state.prices.length, canvas.height)
+                //     ctx.stroke()
+                // }
+                // if (state.ema[i] < state.ema[i - 1] && state.ema[i - 1] > state.ema[i - 2]) {
+                //     ctx.beginPath()
+                //     ctx.moveTo((i) * canvas.width / state.prices.length, 0)
+                //     ctx.lineTo((i) * canvas.width / state.prices.length, canvas.height)
+                //     ctx.stroke()
+                // }
+	        }
+            ctx.setLineDash([])
+
+            // graph rsi ema
             ctx.lineWidth = 2
+            ctx.setLineDash([2,2])
+            for (i = 0; i < state.prices.length; i++) {
+                if (state.rsi[i] > state.rsi_ema[i]) {        
+                    ctx.strokeStyle = "#f60"
+                } else {                    
+                    ctx.strokeStyle = "#06f"                
+                }
+		        ctx.beginPath()
+                ctx.moveTo(((i+state.prices.length-state.rsi_ema.length) - 1) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (1 - state.rsi_ema[i-1] / 100))
+                ctx.lineTo((i+state.prices.length-state.rsi_ema.length) * canvas.width / state.prices.length, 25 + (canvas.height - 50) * (1 - state.rsi_ema[i] / 100))
+                ctx.stroke()
+	        }
+            ctx.setLineDash([])
+
+            // labels
+            // ctx.fillStyle = "#eee"
+            // ctx.fillText("Price: " + Math.round(state.prices[state.prices.length - 1] * 1e2) / 1e2, 25, 25)
+            // ctx.fillText("RSI: " + Math.round(state.rsi[state.rsi.length - 1] * 1e1) / 1e1, 25, 50)
+            // ctx.lineWidth = 2
 
             // draw other stuff
             trades_box = document.getElementById("trades_box")
             trades_box.innerHTML = ""
-            for (var i = state.trades.length - 1; i >= 0; i--) {
+            for (i = state.trades.length - 1; i >= 0; i--) {
                 color = state.trades[i].action === "BUY" ? "green" : "red"
                 plainEnglishAction = state.trades[i].action === "BUY" ? "Bought" : "Sold"
-                trades_box.innerHTML += ("<h3><span class=\"" + color + "\" > " + plainEnglishAction + "</span> " + state.trades[i].amount.toFixed(8) + " ($" + (state.trades[i].amount * state.trades[i].price).toFixed(2) + ") at $" + state.trades[i].price.toFixed(2) + "</h3>")
+                trades_box.innerHTML += ("<h3><span class=\"" + color + "\" > " + 
+                    plainEnglishAction + 
+                    "</span> " + 
+                    state.trades[i].amount.toFixed(8) + 
+                    " ($" + 
+                    (state.trades[i].amount * state.trades[i].price).toFixed(2) + 
+                    ") at $" + state.trades[i].price.toFixed(2) + 
+                    "</h3>")
             }
+
+            // because on mobile i overwrite the arrays to display half the data
+            // and i dont want that edit leaking into the python db
+            state = temp_state
         }
 
         // Set up canvas
@@ -492,7 +657,7 @@
         // tell server about new state
         updateState = function(state) {
             // console.log(state)
-            fetch("http://localhost/json", {
+            fetch("/json", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json'
@@ -508,15 +673,17 @@
                     rsi_low_elem.value = state.settings.rsi_low
                     rsi_high_elem.value = state.settings.rsi_high
                     rsi_period.value = state.settings.rsi_period
+                    rsi_ema_period_elem.value = state.settings.rsi_ema_period
                     startup_elem.value = state.settings.startup
-                        // status_elem.value = state.settings.status
                     dropoff_elem.value = state.settings.dropoff
+                    ema_period_elem.value = state.settings.ema_period
+                    allow_trading_elem.selectedIndex = state.settings.allow_trading?"0":"1"
                 })
         }
 
         // fetch state from server
         fetchState = function() {
-            fetch("http://localhost/json", {
+            fetch("/json", {
                     method: "GET"
                 })
                 .then(response => response.json())
@@ -530,34 +697,33 @@
         draw(canvas, ctx)
 
         // listeners
-        timestep_elem = document.getElementById("timestep")
-        amount_elem = document.getElementById("amount")
-        rsi_low_elem = document.getElementById("rsi_low")
-        rsi_high_elem = document.getElementById("rsi_high")
-        rsi_period_elem = document.getElementById("rsi_period")
-        startup_elem = document.getElementById("startup")
-        status_elem = document.getElementById("status")
-        dropoff_elem = document.getElementById("dropoff")
-        acct_value_elem = document.getElementById("acct_value")
-        acct_value_btc_elem = document.getElementById("acct_value_btc")
-        allow_trading_elem = document.getElementById("allow_trading")
 
         // all the update magic
         setInterval(function() {
             fetchState()
             draw(canvas, ctx)
-            acct_value_elem.innerHTML = state.acct_value
-            acct_value_btc_elem.innerHTML = "(" + 0 + " &#8383;)"
-
-            // timestep_elem.value = state.settings.timestep
-            // amount_elem.value = state.settings.amount
-            // rsi_low_elem.value = state.settings.rsi_low
-            // rsi_high_elem.value = state.settings.rsi_high
-            // rsi_period.value = state.settings.rsi_period
-            // startup_elem.value = state.settings.startup
-            // status_elem.value = state.settings.status
-            // dropoff_elem.value = state.settings.dropoff
-        }, state.timestep * 1000)
+            acct_value_elem.innerHTML = "$"+state.acct_value.toFixed(2)
+            acct_value_btc_elem.innerHTML = "(" + (state.acct_value/state.prices[state.prices.length-1]).toFixed(5) + " &#8383;)"
+            pchange = (state.acct_history[state.acct_history.length-1] - state.acct_history[0]) / state.acct_history[0]
+            percent_change_elem.innerHTML = (Math.abs(pchange)==pchange?"+":"") + (pchange*100).toFixed(3) + "%"
+            if ( Math.abs(pchange)==pchange ) {
+                percent_change_elem.classList.add('green')
+                percent_change_elem.classList.remove('red')
+            } else {
+                percent_change_elem.classList.add('red')
+                percent_change_elem.classList.remove('green')
+            }
+            dollar_change = pchange*state.acct_history[state.acct_history.length-1]
+            btc_change = dollar_change / state.prices[state.prices.length-1]
+            dollar_btc_change_elem.innerHTML = (Math.abs(pchange)==pchange?"+$":"-$") + Math.abs(dollar_change).toFixed(3) + ", " + (Math.abs(pchange)==pchange?"+":"-") + Math.abs(btc_change).toFixed(6) + " &#8383;"
+            if ( Math.abs(pchange)==pchange ) {
+                dollar_btc_change_elem.classList.add('green')
+                dollar_btc_change_elem.classList.remove('red')
+            } else {
+                dollar_btc_change_elem.classList.add('red')
+                dollar_btc_change_elem.classList.remove('green')
+            }
+        }, 1000) // lite mode: state.settings.timestep * 1000
 
         timestep_elem.onchange = function() {
             state.settings.timestep = parseFloat(timestep_elem.value)
@@ -587,8 +753,16 @@
             state.settings.dropoff = parseInt(dropoff_elem.value, 10)
             updateState(state)
         }
+        ema_period_elem.onchange = function() {
+            state.settings.ema_period = parseInt(ema_period_elem.value, 10)
+            updateState(state)
+        }
         allow_trading_elem.onchange = function() {
             state.settings.allow_trading = allow_trading_elem.value == "enabled" ? true : false
+            updateState(state)
+        }
+        rsi_ema_period_elem.onchange = function() {
+            state.settings.rsi_ema_period = parseInt(rsi_ema_period.value, 10)
             updateState(state)
         }
     </script>
