@@ -7,28 +7,27 @@ import json
 frames = 0
 state = {
     "settings": {
-        "timestep": 15.0, 
+        "timestep": 15.0,
         "amount": 0.30,
         "rsi_low": 30,
         "rsi_high": 70,
-        "rsi_period": 14, 
+        "rsi_period": 14,
         "ema_period": 12,
-        "rsi_ema_period": 5,
-        "startup": 5,
-        "dropoff": 240,
+        "rsi_ema_period": 6,
+        "startup": 10,
         "status": "running",
-        "allow_trading": True,
+        "dropoff": 240,
+        "allow_trading": false
     },
-    "prices": [],
-    "rsi": [],
-    "signals": [],
-    "trades": [],
-    "ema": [],
-    "rsi_ema": [],
-    "acct_history": [],
-    "acct_value": 0
+    "data": [{
+        "timestamp": 0,
+        "price": 0,
+        "rsi": 0,
+        "ema": 0,
+        "rsi_ema": 0,
+        "traded": false,
+    }]
 }
-
 
 def buying_power():
     try:
@@ -38,7 +37,6 @@ def buying_power():
 
 
 def held_btc():
-    # return float([item for item in insist(rs.crypto.get_crypto_positions,info=None) if item['currency']['code'] == 'BTC'][0]['quantity_available'])
     try:
         return float([item for item in rs.crypto.get_crypto_positions(info=None) if item['currency']['code'] == 'BTC'][0]['quantity_available'])
     except:
@@ -158,7 +156,9 @@ while True:
         state["signals"].append(0)  # no buy or sell
 
     frames += 1
-    print(frames)
+    print("step %s", frames)
     save_state()
 
     sleep(state["settings"]["timestep"])
+
+    

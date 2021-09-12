@@ -20,41 +20,33 @@ func main() {
 		}
 	}() */
 
+	// figure out Go RH stuff
+
 	http.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			data, err := ioutil.ReadFile("./state.json")
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(w, "Error: %s", err)
 			}
 			fmt.Fprintf(w, "%s", data)
 		}
 		if r.Method == "POST" {
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(w, "Error: %s", err)
 			}
 			err = ioutil.WriteFile("./state.json", body, 0644)
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(w, "Error: %s", err)
 			}
+			fmt.Fprintf(w, "%s", body)
 		}
 	})
 
-	http.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadFile("./index.html")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, "%s", data)
-	})
-
-    http.HandleFunc("/pwa.webmanifest", func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadFile("./pwa.webmanifest")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, "%s", data)
-	})
+	http.HandleFunc("/dashboard", http.ServeFile("./index.html", nil))
+	http.HandleFunc("/pwa.webmanifest", http.ServeFile("./pwa.webmanifest", nil))
+	http.HandleFunc("/app.js", http.ServeFile("./app.js", nil))
+	http.HandleFunc("/style.css", http.ServeFile("./style.css", nil))
 
     http.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir("./icons/"))))
 

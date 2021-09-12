@@ -1,0 +1,263 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+    color-scheme: dark;
+}
+
+body {
+    background: #111115;
+    color: #eee;
+}
+
+.graph {
+    width: 100%;
+    height: 60vh;
+    padding: 25px;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    background: #131317;
+}
+
+.graph canvas {
+    border-radius: 5px;
+    border: 1px solid #222;
+    background: #16161A;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    cursor: crosshair;
+}
+
+.info {
+    width: 100%;
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.account {
+    width: 34%;
+    margin: 25px;
+    padding: 25px;
+    height: calc(40vh - 50px);
+    border-radius: 5px;
+    border: 1px solid #222;
+    background: #16161A;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    overflow-y: scroll;
+}
+
+.account h1,
+.account h3,
+.settings h3,
+.trades h3 {
+    padding: 5px;
+}
+
+.trades h2 {
+    padding: 5px;
+}
+
+.trades h3 {
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.trades h3:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.account h3,
+.trades h3 {
+    font-size: 15px;
+    font-weight: lighter;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.account h3 a {
+    color: #99f;
+}
+
+.account h1 {
+    color: #0f0;
+    font-size: 2em;
+}
+
+.account h1 span#acct_value_btc {
+    font-size: 0.7em;
+    vertical-align: middle;
+}
+
+.trades {
+    width: 33%;
+    margin: 25px 0;
+    padding: 25px;
+    height: calc(40vh - 50px);
+    border-radius: 5px;
+    border: 1px solid #222;
+    background: #16161A;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    overflow: scroll;
+}
+
+.settings {
+    width: 33%;
+    height: calc(40vh - 50px);
+    margin: 25px;
+    padding: 0 25px;
+    border-radius: 5px;
+    border: 1px solid #222;
+    background: #16161A;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    overflow: scroll;
+}
+
+.settings table {
+    width: 100%;
+    margin: 25px auto;
+}
+
+.settings table h3 {
+    padding: 0;
+}
+
+.settings table tr td {
+    padding: 5px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#log {
+    margin: 25px;
+    width: 33%;
+    padding: 25px;
+    border-radius: 5px;
+    border: 1px solid #222;
+    background: #16161A;
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    color: #eee;
+    height: calc(40vh - 50px);
+    display: flex;
+    flex-direction: column-reverse;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-y: scroll;
+}
+
+ ::-webkit-scrollbar-thumb {
+    background-color: #222;
+    border: 4px solid transparent;
+    border-radius: 8px;
+    background-clip: padding-box;
+}
+
+ ::-webkit-scrollbar-thumb:hover {
+    background-color: #333;
+}
+
+ ::-webkit-scrollbar {
+    width: 16px;
+}
+
+ ::-webkit-scrollbar-corner {
+    background: rgba(0, 0, 0, 0);
+}
+
+input {
+    font-size: 16px;
+    width: 75px;
+    background: #333;
+    color: #eee;
+    padding: 3px;
+    border: none;
+}
+
+select {
+    font-size: 16px;
+    background: #333;
+    color: #eee;
+    padding: 3px;
+    border: none;
+}
+
+button {
+    font-size: 16px;
+    background: #333;
+    color: #eee;
+    padding: 4px 8px 4px 8px;
+    border: none;
+}
+
+button:active {
+    background: #999;
+}
+
+.green {
+    color: #0f0;
+}
+
+.red {
+    color: #f33;
+}
+
+#canvas {
+    width: 100%;
+    height: 60vh;
+}
+
+@media screen and (max-width: 1000px) {
+    .graph {
+        padding: 20px;
+        height: 70vh;
+        min-height: 300px;
+    }
+    .info {
+        flex-direction: column;
+    }
+    .account {
+        font-size: 0.8em;
+        width: 93%;
+        margin: 10px auto;
+        margin-top: 20px;
+        padding: 10px 5px;
+        height: auto;
+    }
+    .settings {
+        width: 93%;
+        margin: 10px auto;
+        height: auto;
+        padding: 10px 5px;
+    }
+    .settings table {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    #log {
+        width: 93%;
+        margin: 10px auto;
+        /* height: auto; */
+    }
+    .trades {
+        width: 93%;
+        padding: 15px 5px;
+        margin: 10px auto;
+        height: auto;
+        max-height: 25vh;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .graph {
+        padding: 0px;
+        padding-top: 25px;
+        height: 50vh;
+        background: none;
+        box-shadow: none;
+    }
+    .graph canvas {
+        margin: 0;
+        border: none;
+        background: none;
+        box-shadow: none;
+    }
+}
